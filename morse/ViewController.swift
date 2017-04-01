@@ -14,6 +14,7 @@ class ViewController: UIViewController, UITextViewDelegate {
 
     let avDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
 
+    @IBOutlet weak var segmentController: UISegmentedControl!
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var translatedTextView: UITextView!
     
@@ -21,21 +22,52 @@ class ViewController: UIViewController, UITextViewDelegate {
         morse2flash()
     }
     
+    @IBAction func segmentControlChanged(_ sender: Any) {
+        switch segmentController.selectedSegmentIndex {
+        case 0:
+            translatedTextView.text = textView.text
+            if textView.text != nil {
+                let outputText = convertStringToITU(input: textView.text)
+                self.translatedTextView.text = outputText;
+            }
+        case 1:
+            translatedTextView.text = textView.text
+            
+            if textView.text != nil {
+                let outputText = convertStringToMorse(input: textView.text)
+                self.translatedTextView.text = outputText
+            }
+        default:
+            break;
+        }
+    }
+
     func morse2flash() {
         var count = 1.0
-        
-            for char in self.translatedTextView.text.characters {
+        var flashtext: String = translatedTextView.text
+        if let nothingRange = flashtext.range(of: "--") {
+            flashtext.replaceSubrange(nothingRange, with: "-^-")
+        }
+        for char in flashtext.characters {
                 count+=1
                 DispatchQueue.main.asyncAfter(deadline: .now() + count) {
+                    print(char)
                     if char == "." {
-                        self.shortFlash()
+                        self.startFlash()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
+                            self.stopFlash()
+                        })
                     } else if char == "-" {
-                        self.longFlash()
+                        self.startFlash()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                            self.stopFlash()
+                        })
                     } else {
                     }
             }
         }
     }
+    
     
     func nothing() {
         print("nothing o.o")
@@ -45,24 +77,14 @@ class ViewController: UIViewController, UITextViewDelegate {
         super.viewDidLoad()
         textView.delegate = self
         self.setNeedsStatusBarAppearanceUpdate()
+        self.segmentController.layer.cornerRadius = 8.0
+        self.segmentController.layer.borderWidth = 1.0
+        self.segmentController.layer.borderColor = UIColor.white.cgColor
+        self.segmentController.layer.masksToBounds = true
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
-    }
-    
-    func shortFlash() {
-        toggleFlash()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: {
-            self.stopFlash()
-        })
-    }
-    
-    func longFlash() {
-        toggleFlash()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: {
-            self.stopFlash()
-        })
     }
 
     func stopFlash() {
@@ -77,7 +99,7 @@ class ViewController: UIViewController, UITextViewDelegate {
         }
     }
 
-    func toggleFlash() {
+    func startFlash() {
         let avDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
         
         // check if the device has torch
@@ -107,13 +129,25 @@ class ViewController: UIViewController, UITextViewDelegate {
         }
 
     func textViewDidChange(_ textView: UITextView) {
-        translatedTextView.text = textView.text
-        
-        if textView.text != nil {
-            let outputText = convertStringToMorse(input: textView.text)
-            self.translatedTextView.text = outputText
+        switch segmentController.selectedSegmentIndex {
+        case 0:
+            translatedTextView.text = textView.text
+            if textView.text != nil {
+                let outputText = convertStringToITU(input: textView.text)
+                self.translatedTextView.text = outputText;
+            }
+        case 1:
+            translatedTextView.text = textView.text
+            
+            if textView.text != nil {
+                let outputText = convertStringToMorse(input: textView.text)
+                self.translatedTextView.text = outputText
+            }
+        default:
+            break;
         }
-    }
+        }
+    
 
 
 
